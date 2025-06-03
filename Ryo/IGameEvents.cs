@@ -1,3 +1,5 @@
+using OpenTK.Mathematics;
+
 namespace Ryo;
 
 public interface IGameEvents {
@@ -6,6 +8,7 @@ public interface IGameEvents {
     public Event<Render> OnRender { get; }
     public Event<KeyDown> OnKeyDown { get; }
     public Event<KeyUp> OnKeyUp { get; }
+    public Event<Resize> OnResize { get; }
 
     public record struct Load;
 
@@ -16,4 +19,6 @@ public interface IGameEvents {
     public record struct KeyUp(Utils.KeyData Key);
 
     public record struct KeyDown(Utils.KeyData Key);
+
+    public record struct Resize(Vector2i NewSize);
 }

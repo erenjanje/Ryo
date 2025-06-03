@@ -1,10 +1,11 @@
+using System.Diagnostics;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using StbImageSharp;
 
 namespace Ryo;
 
-public class Renderer {
+public static class Renderer {
     public readonly record struct Data(
         Vector2 Position,
         Vector2 Size,
@@ -24,49 +25,62 @@ public class Renderer {
         internal const int VertexDataSize = 6 * VertexComponentCount * sizeof(float);
     }
 
-    public List<Data> Rectangles { get; } = [];
+    private static readonly List<Data> _rectangles = [];
 
-    public Vector2i ScreenSize { get; set; }
+    private static int _vao;
+    private static int _vertexBuffer;
+    private static int _instanceBuffer;
+    private static int _shaderProgram;
+    private static int _texture;
+    private static int _imageUniformLocation;
 
-    private readonly int _vao;
-    private readonly int _vertexBuffer;
-    private readonly int _instanceBuffer;
-    private readonly int _shaderProgram;
-    private readonly int _texture;
-    private int _imageUniformLocation;
-    private Vector2i TextureSize { get; set; }
+    private static Vector2i _textureSize;
+    private static Vector2i _screenSize;
 
-    public Renderer(IGameEvents events) {
+    public static void Init() {
         _vao = GL.GenVertexArray();
         _vertexBuffer = GL.GenBuffer();
         _instanceBuffer = GL.GenBuffer();
         _shaderProgram = GL.CreateProgram();
         _texture = GL.GenTexture();
-
-        events.OnLoad.Subscribe(this.OnLoad);
-        events.OnRender.Subscribe(this.OnRender);
     }
 
-    private void OnLoad(object sender, IGameEvents.Load args) {
-        this.InitRectangle();
-        _imageUniformLocation = this.InitShader();
-        var (textureWidth, textureHeight) = this.InitTexture();
-        this.TextureSize = new Vector2i(textureWidth, textureHeight);
+    public static void Register(IGameEvents events) {
+        events.OnLoad.Subscribe(OnLoad);
+        events.OnRender.Subscribe(OnRender);
+        events.OnResize.Subscribe(OnResize);
     }
 
-    private void OnRender(object sender, IGameEvents.Render args) {
-        var bufferData = new float[this.Rectangles.Count * Constants.RectangleComponentCount];
+    public static void Render(Data data) {
+        _rectangles.Add(data);
+    }
+
+    private static void OnLoad(object sender, IGameEvents.Load args) {
+        InitRectangle();
+        _imageUniformLocation = InitShader();
+        _textureSize = InitTexture();
+
+        GL.ClearColor(Color4.Magenta);
+        GL.Enable(EnableCap.Blend);
+        GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+    }
+
+    private static void OnRender(object sender, IGameEvents.Render args) {
+        var bufferData = new float[_rectangles.Count * Constants.RectangleComponentCount];
         var index = 0;
-        foreach (var data in Rectangles) {
-            bufferData[index++] = data.Position.X / this.ScreenSize.X;
-            bufferData[index++] = data.Position.Y / this.ScreenSize.Y;
-            bufferData[index++] = data.Size.X / this.ScreenSize.X;
-            bufferData[index++] = data.Size.Y / this.ScreenSize.Y;
-            bufferData[index++] = data.TexturePosition.X / this.TextureSize.X;
-            bufferData[index++] = data.TexturePosition.Y / this.TextureSize.Y;
-            bufferData[index++] = data.TextureSize.X / this.TextureSize.X;
-            bufferData[index++] = data.TextureSize.Y / this.TextureSize.Y;
+        for (var i = 0; i < _rectangles.Count; i++) {
+            var data = _rectangles[i];
+            bufferData[index++] = data.Position.X / _screenSize.X;
+            bufferData[index++] = data.Position.Y / _screenSize.Y;
+            bufferData[index++] = data.Size.X / _screenSize.X;
+            bufferData[index++] = data.Size.Y / _screenSize.Y;
+            bufferData[index++] = data.TexturePosition.X / _textureSize.X;
+            bufferData[index++] = data.TexturePosition.Y / _textureSize.Y;
+            bufferData[index++] = data.TextureSize.X / _textureSize.X;
+            bufferData[index++] = data.TextureSize.Y / _textureSize.Y;
         }
+
+        GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
         GL.BindBuffer(BufferTarget.ArrayBuffer, _instanceBuffer);
         GL.BufferSubData(BufferTarget.ArrayBuffer, 0, bufferData.Length * sizeof(float), bufferData);
@@ -80,25 +94,32 @@ public class Renderer {
 
         GL.BindVertexArray(_vao);
 
-        GL.DrawArraysInstanced(PrimitiveType.Triangles, 0, 6, Rectangles.Count);
+        GL.DrawArraysInstanced(PrimitiveType.Triangles, 0, 6, _rectangles.Count);
         GL.BindVertexArray(0);
 
         GL.UseProgram(0);
 
-        Rectangles.Clear();
+        _rectangles.Clear();
     }
 
-    private void InitRectangle() {
+    private static void OnResize(object sender, IGameEvents.Resize args) {
+        _screenSize = args.NewSize;
+        GL.Viewport(0, 0, _screenSize.X, _screenSize.Y);
+    }
+
+    #region Initialization Logic
+
+    private static void InitRectangle() {
         GL.BindVertexArray(_vao);
 
-        this.AllocateBuffers();
-        this.BindBuffers();
-        this.DeclareAttributes();
+        AllocateBuffers();
+        BindBuffers();
+        DeclareAttributes();
 
         GL.BindVertexArray(0);
     }
 
-    private void AllocateBuffers() {
+    private static void AllocateBuffers() {
         float[] vertexData = [
             0.0f, 0.0f,
             1.0f, 0.0f,
@@ -117,14 +138,14 @@ public class Renderer {
         GL.BufferData(BufferTarget.ArrayBuffer, Constants.InstanceDataSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
     }
 
-    private void BindBuffers() {
+    private static void BindBuffers() {
         GL.BindVertexBuffer(0, _vertexBuffer, 0, Constants.VertexComponentCount * sizeof(float));
 
         GL.BindVertexBuffer(1, _instanceBuffer, 0, Constants.RectangleComponentCount * sizeof(float));
         GL.VertexBindingDivisor(1, 1);
     }
 
-    private void DeclareAttributes() {
+    private static void DeclareAttributes() {
         GL.EnableVertexAttribArray(0);
         GL.VertexAttribBinding(0, 0);
         GL.VertexAttribFormat(0, Constants.VertexComponentCount, VertexAttribType.Float, false, 0);
@@ -142,7 +163,7 @@ public class Renderer {
         offset += Constants.TextureComponentCount * sizeof(float);
     }
 
-    private int InitShader() {
+    private static int InitShader() {
         var vertexShaderData = File.ReadAllText("Shaders/Rectangle.vert");
         var fragmentShaderData = File.ReadAllText("Shaders/Rectangle.frag");
 
@@ -161,7 +182,7 @@ public class Renderer {
         return GL.GetUniformLocation(_shaderProgram, "image");
     }
 
-    private (int, int) InitTexture() {
+    private static Vector2i InitTexture() {
         GL.BindTexture(TextureTarget.Texture2D, _texture);
         GL.ActiveTexture(TextureUnit.Texture0);
 
@@ -191,7 +212,7 @@ public class Renderer {
 
         GL.BindTexture(TextureTarget.Texture2D, 0);
 
-        return (image.Width, image.Height);
+        return new Vector2i(image.Width, image.Height);
     }
 
 
@@ -215,4 +236,6 @@ public class Renderer {
         var infoLog = GL.GetProgramInfoLog(program);
         throw new Exception($"Error while linking program\n{infoLog ?? ""}");
     }
+
+    #endregion
 }
