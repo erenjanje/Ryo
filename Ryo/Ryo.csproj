@@ -8,7 +8,7 @@
         <PublishAot>true</PublishAot>
         <InvariantGlobalization>true</InvariantGlobalization>
         <WarningsAsErrors>Nullable</WarningsAsErrors>
-        <RootNamespace>geimu</RootNamespace>
+        <RootNamespace>Ryo</RootNamespace>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
