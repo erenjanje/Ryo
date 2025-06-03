@@ -25,15 +25,11 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include="Assets/**">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
+        <Content Include="Assets/**" CopyToOutputDirectory="PreserveNewest"/>
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include="Shaders/**">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
+        <Content Include="Shaders/**" CopyToOutputDirectory="PreserveNewest"/>
     </ItemGroup>
 
 </Project>
