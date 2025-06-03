@@ -1,9 +1,19 @@
 namespace Ryo;
 
 public interface IGameEvents {
-    public Event<EventArgs.Load> OnLoad { get; }
-    public Event<EventArgs.Update> OnUpdate { get; }
-    public Event<EventArgs.Render> OnRender { get; }
-    public Event<EventArgs.KeyDown> OnKeyDown { get; }
-    public Event<EventArgs.KeyUp> OnKeyUp { get; }
+    public Event<Load> OnLoad { get; }
+    public Event<Update> OnUpdate { get; }
+    public Event<Render> OnRender { get; }
+    public Event<KeyDown> OnKeyDown { get; }
+    public Event<KeyUp> OnKeyUp { get; }
+
+    public record struct Load;
+
+    public record struct Update(double DeltaTime);
+
+    public record struct Render;
+
+    public record struct KeyUp(Utils.KeyData Key);
+
+    public record struct KeyDown(Utils.KeyData Key);
 }

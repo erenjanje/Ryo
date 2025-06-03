@@ -8,11 +8,11 @@ namespace Ryo;
 public class Application : GameWindow, IGameEvents {
     private readonly Renderer _renderer;
 
-    Event<EventArgs.Load> IGameEvents.OnLoad { get; } = new();
-    Event<EventArgs.Update> IGameEvents.OnUpdate { get; } = new();
-    Event<EventArgs.Render> IGameEvents.OnRender { get; } = new();
-    Event<EventArgs.KeyDown> IGameEvents.OnKeyDown { get; } = new();
-    Event<EventArgs.KeyUp> IGameEvents.OnKeyUp { get; } = new();
+    Event<IGameEvents.Load> IGameEvents.OnLoad { get; } = new();
+    Event<IGameEvents.Update> IGameEvents.OnUpdate { get; } = new();
+    Event<IGameEvents.Render> IGameEvents.OnRender { get; } = new();
+    Event<IGameEvents.KeyDown> IGameEvents.OnKeyDown { get; } = new();
+    Event<IGameEvents.KeyUp> IGameEvents.OnKeyUp { get; } = new();
 
     public Application(int width = 800, int height = 600) :
         base(GameWindowSettings.Default, new NativeWindowSettings()) {
@@ -36,12 +36,12 @@ public class Application : GameWindow, IGameEvents {
         GL.Enable(EnableCap.Blend);
         GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
-        (this as IGameEvents).OnLoad.Invoke(this, new EventArgs.Load());
+        (this as IGameEvents).OnLoad.Invoke(this, new IGameEvents.Load());
     }
 
     protected override void OnUpdateFrame(FrameEventArgs args) {
         base.OnUpdateFrame(args);
-        (this as IGameEvents).OnUpdate.InvokeParallel(this, new EventArgs.Update(args.Time));
+        (this as IGameEvents).OnUpdate.InvokeParallel(this, new IGameEvents.Update(args.Time));
     }
 
     protected override void OnRenderFrame(FrameEventArgs args) {
@@ -52,18 +52,26 @@ public class Application : GameWindow, IGameEvents {
             new Renderer.Data(new Vector2(0, 0), new Vector2(512f, 343.5f), new Vector2(0, 0), new Vector2(1024, 687))
         );
 
-        (this as IGameEvents).OnRender.Invoke(this, new EventArgs.Render());
+        (this as IGameEvents).OnRender.Invoke(this, new IGameEvents.Render());
 
         this.SwapBuffers();
     }
 
     protected override void OnKeyDown(KeyboardKeyEventArgs e) {
         base.OnKeyDown(e);
-        (this as IGameEvents).OnKeyDown.Invoke(this, new EventArgs.KeyDown(new Utils.KeyData(e.Key, e.Modifiers())));
+        (this as IGameEvents).OnKeyDown.Invoke(this, new IGameEvents.KeyDown(new Utils.KeyData(e.Key, e.Modifiers())));
     }
 
     protected override void OnKeyUp(KeyboardKeyEventArgs e) {
         base.OnKeyUp(e);
-        (this as IGameEvents).OnKeyUp.Invoke(this, new EventArgs.KeyUp(new Utils.KeyData(e.Key, e.Modifiers())));
+        (this as IGameEvents).OnKeyUp.Invoke(this, new IGameEvents.KeyUp(new Utils.KeyData(e.Key, e.Modifiers())));
+    }
+
+    protected override void OnMouseDown(MouseButtonEventArgs e) {
+        base.OnMouseDown(e);
+    }
+
+    protected override void OnMouseUp(MouseButtonEventArgs e) {
+        base.OnMouseUp(e);
     }
 }

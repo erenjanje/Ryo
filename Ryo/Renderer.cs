@@ -47,14 +47,14 @@ public class Renderer {
         events.OnRender.Subscribe(this.OnRender);
     }
 
-    private void OnLoad(object sender, EventArgs.Load args) {
+    private void OnLoad(object sender, IGameEvents.Load args) {
         this.InitRectangle();
         _imageUniformLocation = this.InitShader();
         var (textureWidth, textureHeight) = this.InitTexture();
         this.TextureSize = new Vector2i(textureWidth, textureHeight);
     }
 
-    private void OnRender(object sender, EventArgs.Render args) {
+    private void OnRender(object sender, IGameEvents.Render args) {
         var bufferData = new float[this.Rectangles.Count * Constants.RectangleComponentCount];
         var index = 0;
         foreach (var data in Rectangles) {
