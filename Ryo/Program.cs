@@ -1,4 +1,4 @@
 ﻿using Ryo;
 
-using var app = new Application(width: 800, height: 600);
+using var app = new Application();
 app.Run();

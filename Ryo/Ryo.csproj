@@ -31,5 +31,9 @@
     <ItemGroup>
         <Content Include="Shaders/**" CopyToOutputDirectory="PreserveNewest"/>
     </ItemGroup>
+    
+    <ItemGroup>
+        <Using Include="Ryo.Rendering"/>
+    </ItemGroup>
 
 </Project>
