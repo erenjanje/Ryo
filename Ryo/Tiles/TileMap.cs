@@ -64,7 +64,7 @@ public record TileMap {
         for (var y = 0; y < Height; y++) {
             for (var x = 0; x < Width; x++) {
                 var index = this.CoordinateToIndex((x, y));
-                Renderer.Instance.Draw(this.ToScreenPosition((x, y)), (index, 0));
+                Renderer.Instance.DrawTile(this.ToScreenPosition((x, y)), (index, 0));
             }
         }
     }

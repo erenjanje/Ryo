@@ -65,7 +65,7 @@ public class Renderer {
         _buffer[_bufferIndex++] = textureSize.Y / Atlas.Instance.Texture.Size.Y;
     }
 
-    public void Draw(Vector2 position, Vector2i atlasPosition) =>
+    public void DrawTile(Vector2 position, Vector2i atlasPosition) =>
         Draw(position, Atlas.Instance.CellSize, Atlas.Instance.GetPosition(atlasPosition), Atlas.Instance.CellSize);
 
     private void OnLoad(object sender, GameEvents.Load args) {
