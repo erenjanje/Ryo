@@ -27,8 +27,6 @@ public class Renderer {
 
     public static Renderer Instance { get; } = new();
 
-    public readonly record struct TextureInfo(Vector2 Position, Vector2 Size);
-
     public interface IRequiredEvents
         : IEvent<GameEvents.Load>, IEvent<GameEvents.Resize>;
 
@@ -71,7 +69,8 @@ public class Renderer {
         Draw(position, Atlas.Instance.CellSize, Atlas.Instance.GetPosition(atlasPosition), Atlas.Instance.CellSize);
 
     private void OnLoad(object sender, GameEvents.Load args) {
-        InitRectangle();
+        this.LoadSupportedExtensions();
+        this.InitRectangle();
 
         GL.ClearColor(Color4.Magenta);
         GL.Enable(EnableCap.Blend);
@@ -104,6 +103,16 @@ public class Renderer {
     }
 
     #region Initialization Logic
+
+    private void LoadSupportedExtensions() {
+        var count = GL.GetInteger(GetPName.NumExtensions);
+        for (var i = 0; i < count; i++) {
+            var extension = GL.GetString(StringNameIndexed.Extensions, i);
+            SupportedExtensions.Add(extension);
+        }
+
+        Console.WriteLine($"[{SupportedExtensions.Aggregate((a, b) => $"{a}, {b}")}]");
+    }
 
     private void InitRectangle() {
         GL.BindVertexArray(_vao);
