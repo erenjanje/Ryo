@@ -1,7 +1,7 @@
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
-namespace Ryo;
+namespace Ryo.Tiles;
 
 public record TileMap {
     public interface IRequiredEvents : IEvent<GameEvents.Render>, IEvent<GameEvents.MouseDown>,
@@ -18,7 +18,7 @@ public record TileMap {
     public TileMap(IRequiredEvents events, int width, int height) {
         this.Width = width;
         this.Height = height;
-        this._tiles = new Tile[width, height];
+        _tiles = new Tile[width, height];
         events.Event<GameEvents.Update>().Subscribe(this.OnUpdate);
         events.Event<GameEvents.MouseDown>().Subscribe(this.OnMouseDown);
     }
@@ -28,7 +28,6 @@ public record TileMap {
     private const int Base3 = Base2 * Base2;
     private const int Base4 = Base2 * Base2 * Base2;
     private const Type Border = Type.Dirt;
-    private const int TileSize = 16;
 
     private readonly Tile[,] _tiles;
     private int Width { get; }
@@ -42,7 +41,7 @@ public record TileMap {
         return topLeft * Base1 + topRight * Base2 + bottomLeft * Base3 + bottomRight * Base4;
     }
 
-    private Tile this[int x, int y] {
+    public Tile this[int x, int y] {
         get => x < 0 || x >= Width || y < 0 || y >= Height ? new Tile(Border) : _tiles[x, y];
 
         set {
@@ -55,28 +54,23 @@ public record TileMap {
         set => this[position.X, position.Y] = value;
     }
 
-    private Vector2i ToCoordinates(Vector2 position) {
-        return ((int)(position.X / TileSize), (int)(position.Y / TileSize));
-    }
+    private Vector2i FromScreenPosition(Vector2 position) =>
+        (Vector2i)position / Atlas.Instance.CellSize;
+
+    private Vector2 ToScreenPosition(Vector2i coordinates) =>
+        coordinates * Atlas.Instance.CellSize - Atlas.Instance.CellSize / 2;
 
     private void OnUpdate(object sender, GameEvents.Update args) {
         for (var y = 0; y < Height; y++) {
             for (var x = 0; x < Width; x++) {
                 var index = this.CoordinateToIndex((x, y));
-                Renderer.Draw(
-                    new(
-                        (x * TileSize - TileSize / 2f, y * TileSize - TileSize / 2f),
-                        (TileSize, TileSize),
-                        (index * TileSize, 0),
-                        (TileSize, TileSize)
-                    )
-                );
+                Renderer.Instance.Draw(this.ToScreenPosition((x, y)), (index, 0));
             }
         }
     }
 
     private void OnMouseDown(object sender, GameEvents.MouseDown args) {
-        var coordinate = this.ToCoordinates(args.MousePosition);
-        this[coordinate] = new(args.Button == MouseButton.Left ? Type.Dirt : Type.Grass);
+        var coordinate = this.FromScreenPosition(args.MousePosition);
+        this[coordinate] = new Tile(args.Button == MouseButton.Left ? Type.Dirt : Type.Grass);
     }
 }

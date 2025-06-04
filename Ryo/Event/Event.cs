@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Frozen;
 
-namespace Ryo;
+namespace Ryo.Event;
 
 public class Event<TArg> where TArg : struct {
     public delegate void Handler(object sender, TArg arg);

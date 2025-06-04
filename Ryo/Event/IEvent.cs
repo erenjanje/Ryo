@@ -1,4 +1,4 @@
-namespace Ryo;
+namespace Ryo.Event;
 
 public interface IEvent<T> where T : struct {
     public Event<T> On { get; }

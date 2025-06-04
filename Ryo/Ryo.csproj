@@ -36,4 +36,12 @@
         <Using Include="Ryo.Rendering"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <Using Include="Ryo.Tiles"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Using Include="Ryo.Event"/>
+    </ItemGroup>
+
 </Project>

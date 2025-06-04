@@ -1,8 +1,7 @@
-using System.Runtime.CompilerServices;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
-namespace Ryo;
+namespace Ryo.Event;
 
 public record GameEvents
     : IEvent<GameEvents.Load>,

@@ -15,7 +15,7 @@ public sealed class Application : GameWindow {
         this.Size = new Vector2i(width, height);
         this.CenterWindow();
 
-        Renderer.Register(GameEvents.Instance);
+        Renderer.Instance.Register(GameEvents.Instance);
         _tileMap = new(GameEvents.Instance, 80, 60);
     }
 
@@ -61,7 +61,7 @@ public sealed class Application : GameWindow {
     protected override void OnRenderFrame(FrameEventArgs args) {
         base.OnRenderFrame(args);
         GameEvents.Instance.Event<GameEvents.Render>().Invoke(this, new());
-        Renderer.Render();
+        Renderer.Instance.Render();
         this.SwapBuffers();
     }
 
