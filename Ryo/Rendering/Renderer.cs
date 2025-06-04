@@ -125,18 +125,20 @@ public class Renderer {
     }
 
     private void AllocateBuffers() {
-        float[] vertexData = [
-            0.0f, 0.0f,
-            1.0f, 0.0f,
-            1.0f, 1.0f,
-
-            1.0f, 1.0f,
-            0.0f, 1.0f,
-            0.0f, 0.0f
-        ];
-
         GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBuffer);
-        GL.BufferData(BufferTarget.ArrayBuffer, Constants.VertexDataSize, vertexData, BufferUsageHint.StaticDraw);
+        unsafe {
+            var vertexData = stackalloc float[] {
+                0.0f, 0.0f,
+                1.0f, 0.0f,
+                1.0f, 1.0f,
+
+                1.0f, 1.0f,
+                0.0f, 1.0f,
+                0.0f, 0.0f
+            };
+            GL.BufferData(BufferTarget.ArrayBuffer, Constants.VertexDataSize, new IntPtr(vertexData),
+                BufferUsageHint.StaticDraw);
+        }
 
         GL.BindBuffer(BufferTarget.ArrayBuffer, _instanceBuffer);
         GL.BufferData(BufferTarget.ArrayBuffer, Constants.InstanceDataSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);

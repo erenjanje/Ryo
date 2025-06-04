@@ -9,6 +9,7 @@
         <InvariantGlobalization>true</InvariantGlobalization>
         <WarningsAsErrors>Nullable</WarningsAsErrors>
         <RootNamespace>Ryo</RootNamespace>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
