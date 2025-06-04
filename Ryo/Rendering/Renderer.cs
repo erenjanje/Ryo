@@ -40,12 +40,12 @@ public class Renderer {
     private readonly Shader _shader = new("Shaders/Rectangle.vert", "Shaders/Rectangle.frag");
     private readonly int _imageUniformLocation;
 
-    private static readonly float[] Buffer =
+    private readonly float[] _buffer =
         new float[Constants.MaxRectangles * Constants.RectangleComponentCount * sizeof(float)];
 
-    private static int _bufferIndex = 0;
+    private int _bufferIndex = 0;
 
-    private static Vector2i _screenSize;
+    private Vector2i _screenSize;
 
     private Renderer() {
         _imageUniformLocation = _shader["image"];
@@ -57,14 +57,14 @@ public class Renderer {
     }
 
     public void Draw(Vector2 position, Vector2 size, Vector2 texturePosition, Vector2 textureSize) {
-        Buffer[_bufferIndex++] = position.X / _screenSize.X;
-        Buffer[_bufferIndex++] = position.Y / _screenSize.Y;
-        Buffer[_bufferIndex++] = size.X / _screenSize.X;
-        Buffer[_bufferIndex++] = size.Y / _screenSize.Y;
-        Buffer[_bufferIndex++] = texturePosition.X / Atlas.Instance.Texture.Size.X;
-        Buffer[_bufferIndex++] = texturePosition.Y / Atlas.Instance.Texture.Size.Y;
-        Buffer[_bufferIndex++] = textureSize.X / Atlas.Instance.Texture.Size.X;
-        Buffer[_bufferIndex++] = textureSize.Y / Atlas.Instance.Texture.Size.Y;
+        _buffer[_bufferIndex++] = position.X / _screenSize.X;
+        _buffer[_bufferIndex++] = position.Y / _screenSize.Y;
+        _buffer[_bufferIndex++] = size.X / _screenSize.X;
+        _buffer[_bufferIndex++] = size.Y / _screenSize.Y;
+        _buffer[_bufferIndex++] = texturePosition.X / Atlas.Instance.Texture.Size.X;
+        _buffer[_bufferIndex++] = texturePosition.Y / Atlas.Instance.Texture.Size.Y;
+        _buffer[_bufferIndex++] = textureSize.X / Atlas.Instance.Texture.Size.X;
+        _buffer[_bufferIndex++] = textureSize.Y / Atlas.Instance.Texture.Size.Y;
     }
 
     public void Draw(Vector2 position, Vector2i atlasPosition) =>
@@ -84,7 +84,7 @@ public class Renderer {
         var instanceCount = _bufferIndex / Constants.RectangleComponentCount;
 
         GL.BindBuffer(BufferTarget.ArrayBuffer, _instanceBuffer);
-        GL.BufferSubData(BufferTarget.ArrayBuffer, 0, _bufferIndex * sizeof(float), Buffer);
+        GL.BufferSubData(BufferTarget.ArrayBuffer, 0, _bufferIndex * sizeof(float), _buffer);
         GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
 
         _shader.Use();
