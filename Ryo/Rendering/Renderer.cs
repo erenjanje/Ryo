@@ -3,6 +3,18 @@ using OpenTK.Mathematics;
 
 namespace Ryo.Rendering;
 
+internal static class Constants {
+    internal const int MaxRectangles = 65536;
+
+    internal const int PositionComponentCount = 4;
+    internal const int TextureComponentCount = 4;
+    internal const int RectangleComponentCount = PositionComponentCount + TextureComponentCount;
+    internal const int InstanceDataSize = RectangleComponentCount * sizeof(float) * MaxRectangles;
+
+    internal const int VertexComponentCount = 2;
+    internal const int VertexDataSize = 6 * VertexComponentCount * sizeof(float);
+}
+
 public class Renderer {
     public readonly record struct Data(
         Vector2 Position,
@@ -20,17 +32,7 @@ public class Renderer {
     public interface IRequiredEvents
         : IEvent<GameEvents.Load>, IEvent<GameEvents.Resize>;
 
-    private static class Constants {
-        internal const int MaxRectangles = 65536;
-
-        internal const int PositionComponentCount = 4;
-        internal const int TextureComponentCount = 4;
-        internal const int RectangleComponentCount = PositionComponentCount + TextureComponentCount;
-        internal const int InstanceDataSize = RectangleComponentCount * sizeof(float) * MaxRectangles;
-
-        internal const int VertexComponentCount = 2;
-        internal const int VertexDataSize = 6 * VertexComponentCount * sizeof(float);
-    }
+    public HashSet<string> SupportedExtensions { get; } = [];
 
     private readonly int _vao = GL.GenVertexArray();
     private readonly int _vertexBuffer = GL.GenBuffer();
