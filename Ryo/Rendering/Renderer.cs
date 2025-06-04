@@ -12,13 +12,15 @@ public static class Renderer {
         Vector2 Size,
         Vector2 TexturePosition,
         Vector2 TextureSize
-    );
+    ) {
+        public Data(Vector2 position, Vector2 size) : this(position, size, Vector2.Zero, size) { }
+    }
 
     public interface IRequiredEvents
-        : IEvent<GameEvents.Load>, IEvent<GameEvents.Render>, IEvent<GameEvents.Resize>;
+        : IEvent<GameEvents.Load>, IEvent<GameEvents.Resize>;
 
     private static class Constants {
-        internal const int MaxRectangles = 256;
+        internal const int MaxRectangles = 65536;
 
         internal const int PositionComponentCount = 4;
         internal const int TextureComponentCount = 4;
@@ -29,14 +31,17 @@ public static class Renderer {
         internal const int VertexDataSize = 6 * VertexComponentCount * sizeof(float);
     }
 
-    private static readonly List<Data> Rectangles = [];
-
     private static readonly int Vao = GL.GenVertexArray();
     private static readonly int VertexBuffer = GL.GenBuffer();
     private static readonly int InstanceBuffer = GL.GenBuffer();
     private static readonly Shader Shader = new("Shaders/Rectangle.vert", "Shaders/Rectangle.frag");
-    private static readonly Texture Texture = new("Assets/zortium.png");
+    private static readonly Texture Texture = new("Assets/TileMap.png");
     private static readonly int ImageUniformLocation;
+
+    private static readonly float[] Buffer =
+        new float[Constants.MaxRectangles * Constants.RectangleComponentCount * sizeof(float)];
+
+    private static int _bufferIndex = 0;
 
     private static Vector2i _screenSize;
 
@@ -46,12 +51,18 @@ public static class Renderer {
 
     public static void Register(IRequiredEvents events) {
         events.Event<GameEvents.Load>().Subscribe(OnLoad);
-        events.Event<GameEvents.Render>().Subscribe(OnRender);
         events.Event<GameEvents.Resize>().Subscribe(OnResize);
     }
 
-    public static void Render(Data data) {
-        Rectangles.Add(data);
+    public static void Draw(Data data) {
+        Buffer[_bufferIndex++] = data.Position.X / _screenSize.X;
+        Buffer[_bufferIndex++] = data.Position.Y / _screenSize.Y;
+        Buffer[_bufferIndex++] = data.Size.X / _screenSize.X;
+        Buffer[_bufferIndex++] = data.Size.Y / _screenSize.Y;
+        Buffer[_bufferIndex++] = data.TexturePosition.X / Texture.Size.X;
+        Buffer[_bufferIndex++] = data.TexturePosition.Y / Texture.Size.Y;
+        Buffer[_bufferIndex++] = data.TextureSize.X / Texture.Size.X;
+        Buffer[_bufferIndex++] = data.TextureSize.Y / Texture.Size.Y;
     }
 
     private static void OnLoad(object sender, GameEvents.Load args) {
@@ -62,28 +73,13 @@ public static class Renderer {
         GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
     }
 
-    private static void OnRender(object sender, GameEvents.Render args) {
+    public static void Render() {
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-        var bufferData = new float[Rectangles.Count * Constants.RectangleComponentCount];
-        var index = 0;
-        for (var i = 0; i < Rectangles.Count; i++) {
-            var data = Rectangles[i];
-            bufferData[index++] = data.Position.X / _screenSize.X;
-            bufferData[index++] = data.Position.Y / _screenSize.Y;
-            bufferData[index++] = data.Size.X / _screenSize.X;
-            bufferData[index++] = data.Size.Y / _screenSize.Y;
-            bufferData[index++] = data.TexturePosition.X / Texture.Size.X;
-            bufferData[index++] = data.TexturePosition.Y / Texture.Size.Y;
-            bufferData[index++] = data.TextureSize.X / Texture.Size.X;
-            bufferData[index++] = data.TextureSize.Y / Texture.Size.Y;
-        }
-
-        var instanceCount = Rectangles.Count;
-        Rectangles.Clear();
+        var instanceCount = _bufferIndex / Constants.RectangleComponentCount;
 
         GL.BindBuffer(BufferTarget.ArrayBuffer, InstanceBuffer);
-        GL.BufferSubData(BufferTarget.ArrayBuffer, 0, bufferData.Length * sizeof(float), bufferData);
+        GL.BufferSubData(BufferTarget.ArrayBuffer, 0, _bufferIndex * sizeof(float), Buffer);
         GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
 
         Shader.Use();
@@ -93,6 +89,8 @@ public static class Renderer {
 
         GL.DrawArraysInstanced(PrimitiveType.Triangles, 0, 6, instanceCount);
         GL.BindVertexArray(0);
+
+        _bufferIndex = 0;
     }
 
     private static void OnResize(object sender, GameEvents.Resize args) {

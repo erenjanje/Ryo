@@ -3,7 +3,7 @@ using System.Collections.Frozen;
 
 namespace Ryo;
 
-public readonly struct Event<TArg> where TArg : struct {
+public class Event<TArg> where TArg : struct {
     public delegate void Handler(object sender, TArg arg);
 
     private readonly List<Handler> _handlers = [];
@@ -30,25 +30,20 @@ public readonly struct Event<TArg> where TArg : struct {
 
     public void InvokeParallel(object sender, TArg arg) {
         this.ApplyPendingOperations();
-        using var countdownEvent = new CountdownEvent(_handlers.Count);
 
-        for (var i = 0; i < _handlers.Count; i++) {
-            var handler = _handlers[i];
-            ThreadPool.QueueUserWorkItem(_ => {
-                handler(sender, arg);
-                countdownEvent.Signal();
-            });
-        }
-
-        countdownEvent.Wait();
+        Parallel.ForEach(_handlers, handler => handler.Invoke(sender, arg));
     }
 
     private void ApplyPendingOperations() {
-        _handlers.AddRange(_newHandlers);
-        _newHandlers.Clear();
+        if (!_newHandlers.IsEmpty) {
+            _handlers.AddRange(_newHandlers);
+            _newHandlers.Clear();
+        }
 
-        var deletedHandlers = _deletedHandlers.ToFrozenSet();
-        _handlers.RemoveAll(h => deletedHandlers.Contains(h));
-        _deletedHandlers.Clear();
+        if (!_deletedHandlers.IsEmpty) {
+            var deletedHandlers = _deletedHandlers.ToFrozenSet();
+            _handlers.RemoveAll(h => deletedHandlers.Contains(h));
+            _deletedHandlers.Clear();
+        }
     }
 }

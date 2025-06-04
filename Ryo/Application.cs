@@ -8,7 +8,7 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 namespace Ryo;
 
 public sealed class Application : GameWindow {
-    public Application(int width = 800, int height = 600) :
+    public Application(int width = 1280, int height = 960) :
         base(GameWindowSettings.Default, new NativeWindowSettings()) {
         GL.LoadBindings(new GLFWBindingsContext()); // In NativeAot, bindings are not loaded by default
 
@@ -16,7 +16,10 @@ public sealed class Application : GameWindow {
         this.CenterWindow();
 
         Renderer.Register(GameEvents.Instance);
+        _tileMap = new(GameEvents.Instance, 80, 60);
     }
+
+    private TileMap _tileMap;
 
     #region Lifetime Events
 
@@ -52,15 +55,13 @@ public sealed class Application : GameWindow {
 
     protected override void OnUpdateFrame(FrameEventArgs args) {
         base.OnUpdateFrame(args);
-        Renderer.Render(
-            new Renderer.Data(new Vector2(0, 0), new Vector2(512f, 343.5f), new Vector2(0, 0), new Vector2(1024, 687))
-        );
-        GameEvents.Instance.Event<GameEvents.Update>().InvokeParallel(this, new(args.Time));
+        GameEvents.Instance.Event<GameEvents.Update>().Invoke(this, new(args.Time));
     }
 
     protected override void OnRenderFrame(FrameEventArgs args) {
         base.OnRenderFrame(args);
         GameEvents.Instance.Event<GameEvents.Render>().Invoke(this, new());
+        Renderer.Render();
         this.SwapBuffers();
     }
 
