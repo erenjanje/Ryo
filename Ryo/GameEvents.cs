@@ -16,7 +16,8 @@ public record GameEvents
       IEvent<GameEvents.MouseUp>,
       IEvent<GameEvents.MouseDown>,
       IEvent<GameEvents.MouseMove>,
-      Renderer.IRequiredEvents {
+      Renderer.IRequiredEvents,
+      TileMap.IRequiredEvents {
     public static GameEvents Instance { get; } = new();
 
     private GameEvents() { }
