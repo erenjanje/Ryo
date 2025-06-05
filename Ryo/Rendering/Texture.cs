@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using StbImageSharp;
@@ -5,7 +6,7 @@ using StbImageSharp;
 namespace Ryo.Rendering;
 
 public readonly record struct Texture(int Tex) {
-    public Vector2i Size { get; private init; }
+    public Vector2i Size { get; }
 
     public Texture(string file) : this(GL.GenTexture()) {
         GL.BindTexture(TextureTarget.Texture2D, Tex);
@@ -18,24 +19,11 @@ public readonly record struct Texture(int Tex) {
             (int)TextureMinFilter.NearestMipmapNearest);
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
 
-        var image = ImageResult.FromStream(File.OpenRead(file), ColorComponents.RedGreenBlueAlpha);
+        this.Size = this.LoadImage(file);
 
-        GL.TexImage2D(
-            TextureTarget.Texture2D,
-            0,
-            PixelInternalFormat.Rgba,
-            image.Width,
-            image.Height,
-            0,
-            PixelFormat.Rgba,
-            PixelType.UnsignedByte,
-            image.Data
-        );
         GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
 
         GL.BindTexture(TextureTarget.Texture2D, 0);
-
-        this.Size = new Vector2i(image.Width, image.Height);
     }
 
     public void Bind(int textureUnit, int uniform) {
@@ -46,5 +34,37 @@ public readonly record struct Texture(int Tex) {
     public void Bind(int textureUnit) {
         GL.BindTexture(TextureTarget.Texture2D, Tex);
         GL.ActiveTexture(TextureUnit.Texture0 + textureUnit);
+    }
+
+    private unsafe Vector2i LoadImage(string filename) {
+        var file = File.OpenRead(filename);
+
+        var pointer = (byte*)null;
+        int width;
+        int height;
+
+        try {
+            int componentCount;
+            pointer = StbImage.stbi__load_and_postprocess_8bit(new StbImage.stbi__context(file), &width, &height,
+                &componentCount, 4);
+
+            GL.TexImage2D(
+                TextureTarget.Texture2D,
+                0,
+                PixelInternalFormat.Rgba,
+                width,
+                height,
+                0,
+                PixelFormat.Rgba,
+                PixelType.UnsignedByte,
+                (IntPtr)pointer
+            );
+        } finally {
+            if ((IntPtr)pointer != IntPtr.Zero) {
+                Marshal.FreeHGlobal((IntPtr)pointer);
+            }
+        }
+
+        return (width, height);
     }
 }
