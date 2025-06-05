@@ -10,7 +10,7 @@ public record TileMap : ITileMap {
         _tiles = new ITileMap.Tile[width, height];
     }
 
-    public void Register(ref IGameEvents events) {
+    public void Register(IGameEvents events) {
         events.OnRender.Subscribe(this.OnRender);
         events.OnMouseDown.Subscribe(this.OnMouseDown);
     }

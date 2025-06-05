@@ -16,8 +16,8 @@ public sealed class Application : GameWindow {
         _renderer = new Renderer();
         _tileMap = new TileMap(80, 60);
 
-        _renderer.Register(ref _events);
-        _tileMap.Register(ref _events);
+        _renderer.Register(_events);
+        _tileMap.Register(_events);
 
         this.Size = new Vector2i(width, height);
         this.CenterWindow();

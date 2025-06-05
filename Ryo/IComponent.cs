@@ -1,5 +1,5 @@
 namespace Ryo;
 
 public interface IComponent {
-    void Register(ref IGameEvents events);
+    void Register(IGameEvents events);
 }

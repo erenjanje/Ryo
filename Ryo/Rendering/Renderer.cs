@@ -50,7 +50,7 @@ public sealed class Renderer : IRenderer {
         _screenSize = Vector2i.Zero;
     }
 
-    public void Register(ref IGameEvents events) {
+    public void Register(IGameEvents events) {
         events.OnLoad.Subscribe(this.OnLoad);
         events.OnResize.Subscribe(this.OnResize);
     }
