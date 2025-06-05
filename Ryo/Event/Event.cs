@@ -9,6 +9,7 @@ public class Event<TArg> where TArg : struct {
     private readonly List<Handler> _handlers = [];
     private readonly ConcurrentBag<Handler> _newHandlers = [];
     private readonly ConcurrentBag<Handler> _deletedHandlers = [];
+    private readonly CountdownEvent _countdown = new(0);
 
     public Event() { }
 
@@ -30,8 +31,20 @@ public class Event<TArg> where TArg : struct {
 
     public void InvokeParallel(object sender, TArg arg) {
         this.ApplyPendingOperations();
+        _countdown.Reset(_handlers.Count);
 
-        Parallel.ForEach(_handlers, handler => handler.Invoke(sender, arg));
+        for (var i = 0; i < _handlers.Count; i++) {
+            ThreadPool.QueueUserWorkItem(
+                static state => {
+                    var (handler, countdown, sender, arg) = state;
+                    handler.Invoke(sender, arg);
+                    countdown.Signal();
+                },
+                (_handlers[i], _countdown, sender, arg),
+                preferLocal: false);
+        }
+
+        _countdown.Wait();
     }
 
     private void ApplyPendingOperations() {

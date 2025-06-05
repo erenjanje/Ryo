@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 
@@ -110,8 +111,7 @@ public class Renderer {
             var extension = GL.GetString(StringNameIndexed.Extensions, i);
             SupportedExtensions.Add(extension);
         }
-
-        Console.WriteLine($"[{SupportedExtensions.Aggregate((a, b) => $"{a}, {b}")}]");
+        // Console.WriteLine($"[{SupportedExtensions.Aggregate((a, b) => $"{a}, {b}")}]");
     }
 
     private void InitRectangle() {

@@ -15,6 +15,8 @@ public sealed class Application : GameWindow {
         this.Size = new Vector2i(width, height);
         this.CenterWindow();
 
+        var _ = Atlas.Instance.Texture;
+
         Renderer.Instance.Register(GameEvents.Instance);
         _tileMap = new(GameEvents.Instance, 80, 60);
     }
@@ -55,7 +57,7 @@ public sealed class Application : GameWindow {
 
     protected override void OnUpdateFrame(FrameEventArgs args) {
         base.OnUpdateFrame(args);
-        GameEvents.Instance.Event<GameEvents.Update>().Invoke(this, new(args.Time));
+        GameEvents.Instance.Event<GameEvents.Update>().InvokeParallel(this, new(args.Time));
     }
 
     protected override void OnRenderFrame(FrameEventArgs args) {
