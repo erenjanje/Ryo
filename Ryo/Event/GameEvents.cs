@@ -52,7 +52,7 @@ public record GameEvents
 
     Event<Update> IEvent<Update>.On { get; } = new();
 
-    public record struct Render;
+    public record struct Render(IRenderer Renderer);
 
     Event<Render> IEvent<Render>.On { get; } = new();
 

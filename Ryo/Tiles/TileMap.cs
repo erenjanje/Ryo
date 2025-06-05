@@ -4,8 +4,7 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 namespace Ryo.Tiles;
 
 public record TileMap {
-    public interface IRequiredEvents : IEvent<GameEvents.Render>, IEvent<GameEvents.MouseDown>,
-                                       IEvent<GameEvents.Update>;
+    public interface IRequiredEvents : IEvent<GameEvents.Render>, IEvent<GameEvents.MouseDown>;
 
     public enum Type {
         Dirt,
@@ -19,7 +18,7 @@ public record TileMap {
         this.Width = width;
         this.Height = height;
         _tiles = new Tile[width, height];
-        events.Event<GameEvents.Update>().Subscribe(this.OnUpdate);
+        events.Event<GameEvents.Render>().Subscribe(this.OnRender);
         events.Event<GameEvents.MouseDown>().Subscribe(this.OnMouseDown);
     }
 
@@ -28,6 +27,8 @@ public record TileMap {
     private const int Base3 = Base2 * Base2;
     private const int Base4 = Base2 * Base2 * Base2;
     private const Type Border = Type.Dirt;
+    private const int TileUnit = 32;
+    private static readonly Vector2i TileSize = (TileUnit, TileUnit);
 
     private readonly Tile[,] _tiles;
     private int Width { get; }
@@ -55,16 +56,16 @@ public record TileMap {
     }
 
     private Vector2i FromScreenPosition(Vector2 position) =>
-        (Vector2i)position / Atlas.Instance.CellSize;
+        (Vector2i)position / TileSize;
 
     private Vector2 ToScreenPosition(Vector2i coordinates) =>
-        coordinates * Atlas.Instance.CellSize - Atlas.Instance.CellSize / 2;
+        coordinates * TileSize - TileSize / 2;
 
-    private void OnUpdate(object sender, GameEvents.Update args) {
+    private void OnRender(object sender, GameEvents.Render args) {
         for (var y = 0; y < Height; y++) {
             for (var x = 0; x < Width; x++) {
                 var index = this.CoordinateToIndex((x, y));
-                Renderer.Instance.DrawTile(this.ToScreenPosition((x, y)), (index, 0));
+                args.Renderer.DrawTile(this.ToScreenPosition((x, y)), TileSize, (index, 0));
             }
         }
     }

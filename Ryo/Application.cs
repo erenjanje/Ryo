@@ -15,13 +15,12 @@ public sealed class Application : GameWindow {
         this.Size = new Vector2i(width, height);
         this.CenterWindow();
 
-        var _ = Atlas.Instance.Texture;
-
-        Renderer.Instance.Register(GameEvents.Instance);
-        _tileMap = new(GameEvents.Instance, 80, 60);
+        _renderer = new Renderer(GameEvents.Instance);
+        _tileMap = new TileMap(GameEvents.Instance, 80, 60);
     }
 
-    private TileMap _tileMap;
+    private readonly IRenderer _renderer;
+    private readonly TileMap _tileMap;
 
     #region Lifetime Events
 
@@ -62,8 +61,8 @@ public sealed class Application : GameWindow {
 
     protected override void OnRenderFrame(FrameEventArgs args) {
         base.OnRenderFrame(args);
-        GameEvents.Instance.Event<GameEvents.Render>().Invoke(this, new());
-        Renderer.Instance.Render();
+        GameEvents.Instance.Event<GameEvents.Render>().Invoke(this, new(_renderer));
+        _renderer.Render();
         this.SwapBuffers();
     }
 
