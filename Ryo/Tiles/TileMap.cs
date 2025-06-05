@@ -10,7 +10,7 @@ public record TileMap : ITileMap {
         _tiles = new ITileMap.Tile[width, height];
     }
 
-    public void Register(ref GameEvents events) {
+    public void Register(ref IGameEvents events) {
         events.OnRender.Subscribe(this.OnRender);
         events.OnMouseDown.Subscribe(this.OnMouseDown);
     }
@@ -54,7 +54,7 @@ public record TileMap : ITileMap {
     private Vector2 ToScreenPosition(Vector2i coordinates) =>
         coordinates * TileSize - TileSize / 2;
 
-    private void OnRender(object sender, GameEvents.Render args) {
+    private void OnRender(object sender, IGameEvents.Render args) {
         for (var y = 0; y < Height; y++) {
             for (var x = 0; x < Width; x++) {
                 var index = this.CoordinateToIndex((x, y));
@@ -63,7 +63,7 @@ public record TileMap : ITileMap {
         }
     }
 
-    private void OnMouseDown(object sender, GameEvents.MouseDown args) {
+    private void OnMouseDown(object sender, IGameEvents.MouseDown args) {
         var coordinate = this.FromScreenPosition(args.MousePosition);
         this[coordinate] =
             new ITileMap.Tile(args.Button == MouseButton.Left ? ITileMap.Type.Dirt : ITileMap.Type.Grass);

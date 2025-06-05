@@ -18,8 +18,4 @@ public static class Utils {
             set;
         } = initialValue;
     }
-
-    public static Event<T> Event<T>(this IEvent<T> self) where T : struct {
-        return self.On;
-    }
 }

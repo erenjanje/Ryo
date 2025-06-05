@@ -23,9 +23,11 @@ public sealed class Application : GameWindow {
         this.CenterWindow();
     }
 
-    private readonly GameEvents _events;
+    private readonly IGameEvents _events;
     private readonly IRenderer _renderer;
     private readonly ITileMap _tileMap;
+
+    #region Events
 
     #region Lifetime Events
 
@@ -103,6 +105,8 @@ public sealed class Application : GameWindow {
         base.OnMouseMove(e);
         _events.OnMouseMove.Invoke(this, new(e.Position, e.Delta));
     }
+
+    #endregion
 
     #endregion
 }

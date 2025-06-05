@@ -50,7 +50,7 @@ public sealed class Renderer : IRenderer {
         _screenSize = Vector2i.Zero;
     }
 
-    public void Register(ref GameEvents events) {
+    public void Register(ref IGameEvents events) {
         events.OnLoad.Subscribe(this.OnLoad);
         events.OnResize.Subscribe(this.OnResize);
     }
@@ -72,15 +72,6 @@ public sealed class Renderer : IRenderer {
     public void DrawTile(Vector2 position, Vector2 size, Vector2i atlasPosition) =>
         Draw(position, size, _atlas.GetPosition(atlasPosition), Atlas.CellSize);
 
-    private void OnLoad(object sender, GameEvents.Load args) {
-        this.LoadSupportedExtensions();
-        this.InitRectangle();
-
-        GL.ClearColor(Color4.Magenta);
-        GL.Enable(EnableCap.Blend);
-        GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
-    }
-
     public void Render() {
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
@@ -101,10 +92,23 @@ public sealed class Renderer : IRenderer {
         _bufferIndex = 0;
     }
 
-    private void OnResize(object sender, GameEvents.Resize args) {
+    #region Events
+
+    private void OnLoad(object sender, IGameEvents.Load args) {
+        this.LoadSupportedExtensions();
+        this.InitRectangle();
+
+        GL.ClearColor(Color4.Magenta);
+        GL.Enable(EnableCap.Blend);
+        GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+    }
+
+    private void OnResize(object sender, IGameEvents.Resize args) {
         _screenSize = args.NewSize;
         GL.Viewport(0, 0, _screenSize.X, _screenSize.Y);
     }
+
+    #endregion
 
     #region Initialization Logic
 
