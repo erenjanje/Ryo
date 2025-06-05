@@ -3,7 +3,7 @@ using System.Collections.Frozen;
 
 namespace Ryo.Event;
 
-public class Event<TArg> where TArg : struct {
+public sealed class Event<TArg> where TArg : struct {
     public delegate void Handler(object sender, TArg arg);
 
     private readonly List<Handler> _handlers = [];

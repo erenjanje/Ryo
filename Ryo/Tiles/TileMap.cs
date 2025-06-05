@@ -3,7 +3,7 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace Ryo.Tiles;
 
-public record TileMap : ITileMap {
+public sealed record TileMap : ITileMap {
     public TileMap(int width, int height) {
         this.Width = width;
         this.Height = height;

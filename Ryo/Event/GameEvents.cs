@@ -1,6 +1,6 @@
 namespace Ryo.Event;
 
-public class GameEvents : IGameEvents {
+public sealed class GameEvents : IGameEvents {
     public Event<IGameEvents.Load> OnLoad { get; } = new();
     public Event<IGameEvents.Close> OnClose { get; } = new();
     public Event<IGameEvents.Unload> OnUnload { get; } = new();

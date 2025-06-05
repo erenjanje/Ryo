@@ -2,7 +2,7 @@ using OpenTK.Mathematics;
 
 namespace Ryo.Tiles;
 
-public class Atlas {
+public sealed class Atlas {
     public Texture Texture { get; } = new("Assets/TileMap.png");
     public const int CellUnit = 16;
     public static readonly Vector2i CellSize = new(CellUnit, CellUnit);
