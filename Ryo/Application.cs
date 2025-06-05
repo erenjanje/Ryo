@@ -12,34 +12,38 @@ public sealed class Application : GameWindow {
         base(GameWindowSettings.Default, new NativeWindowSettings()) {
         GL.LoadBindings(new GLFWBindingsContext()); // In NativeAot, bindings are not loaded by default
 
+        _events = new GameEvents();
+        _renderer = new Renderer();
+        _tileMap = new TileMap(80, 60);
+
+        _renderer.Register(ref _events);
+        _tileMap.Register(ref _events);
+
         this.Size = new Vector2i(width, height);
         this.CenterWindow();
-
-        var _ = Atlas.Instance.Texture;
-
-        Renderer.Instance.Register(GameEvents.Instance);
-        _tileMap = new(GameEvents.Instance, 80, 60);
     }
 
-    private TileMap _tileMap;
+    private readonly GameEvents _events;
+    private readonly IRenderer _renderer;
+    private readonly ITileMap _tileMap;
 
     #region Lifetime Events
 
     protected override void OnLoad() {
         base.OnLoad();
-        GameEvents.Instance.Event<GameEvents.Load>().Invoke(this, new());
+        _events.OnLoad.Invoke(this, new());
     }
 
     protected override void OnClosing(CancelEventArgs e) {
         base.OnClosing(e);
         var shouldClose = new Utils.ThreadSafeWrapper<bool>(e.Cancel);
-        GameEvents.Instance.Event<GameEvents.Close>().Invoke(this, new(shouldClose));
+        _events.OnClose.Invoke(this, new(shouldClose));
         e.Cancel = shouldClose.Value;
     }
 
     protected override void OnUnload() {
         base.OnUnload();
-        GameEvents.Instance.Event<GameEvents.Unload>().Invoke(this, new());
+        _events.OnUnload.Invoke(this, new());
     }
 
     #endregion
@@ -48,7 +52,7 @@ public sealed class Application : GameWindow {
 
     protected override void OnResize(ResizeEventArgs e) {
         base.OnResize(e);
-        GameEvents.Instance.Event<GameEvents.Resize>().Invoke(this, new(e.Size));
+        _events.OnResize.Invoke(this, new(e.Size));
     }
 
     #endregion
@@ -57,13 +61,13 @@ public sealed class Application : GameWindow {
 
     protected override void OnUpdateFrame(FrameEventArgs args) {
         base.OnUpdateFrame(args);
-        GameEvents.Instance.Event<GameEvents.Update>().InvokeParallel(this, new(args.Time));
+        _events.OnUpdate.InvokeParallel(this, new(args.Time));
     }
 
     protected override void OnRenderFrame(FrameEventArgs args) {
         base.OnRenderFrame(args);
-        GameEvents.Instance.Event<GameEvents.Render>().Invoke(this, new());
-        Renderer.Instance.Render();
+        _events.OnRender.Invoke(this, new(_renderer));
+        _renderer.Render();
         this.SwapBuffers();
     }
 
@@ -73,12 +77,12 @@ public sealed class Application : GameWindow {
 
     protected override void OnKeyDown(KeyboardKeyEventArgs e) {
         base.OnKeyDown(e);
-        GameEvents.Instance.Event<GameEvents.KeyDown>().Invoke(this, new(e.Key, e.Modifiers));
+        _events.OnKeyDown.Invoke(this, new(e.Key, e.Modifiers));
     }
 
     protected override void OnKeyUp(KeyboardKeyEventArgs e) {
         base.OnKeyUp(e);
-        GameEvents.Instance.Event<GameEvents.KeyUp>().Invoke(this, new(e.Key, e.Modifiers));
+        _events.OnKeyUp.Invoke(this, new(e.Key, e.Modifiers));
     }
 
     #endregion
@@ -87,17 +91,17 @@ public sealed class Application : GameWindow {
 
     protected override void OnMouseDown(MouseButtonEventArgs e) {
         base.OnMouseDown(e);
-        GameEvents.Instance.Event<GameEvents.MouseDown>().Invoke(this, new(this.MousePosition, e.Button, e.Modifiers));
+        _events.OnMouseDown.Invoke(this, new(this.MousePosition, e.Button, e.Modifiers));
     }
 
     protected override void OnMouseUp(MouseButtonEventArgs e) {
         base.OnMouseUp(e);
-        GameEvents.Instance.Event<GameEvents.MouseUp>().Invoke(this, new(this.MousePosition, e.Button, e.Modifiers));
+        _events.OnMouseUp.Invoke(this, new(this.MousePosition, e.Button, e.Modifiers));
     }
 
     protected override void OnMouseMove(MouseMoveEventArgs e) {
         base.OnMouseMove(e);
-        GameEvents.Instance.Event<GameEvents.MouseMove>().Invoke(this, new(e.Position, e.Delta));
+        _events.OnMouseMove.Invoke(this, new(e.Position, e.Delta));
     }
 
     #endregion

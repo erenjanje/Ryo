@@ -16,43 +16,43 @@ internal static class Constants {
     internal const int VertexDataSize = 6 * VertexComponentCount * sizeof(float);
 }
 
-public class Renderer {
-    public readonly record struct Data(
-        Vector2 Position,
-        Vector2 Size,
-        Vector2 TexturePosition,
-        Vector2 TextureSize
-    ) {
-        public Data(Vector2 position, Vector2 size) : this(position, size, Vector2.Zero, size) { }
-    }
-
-    public static Renderer Instance { get; } = new();
-
-    public interface IRequiredEvents
-        : IEvent<GameEvents.Load>, IEvent<GameEvents.Resize>;
-
+public sealed class Renderer : IRenderer {
     public HashSet<string> SupportedExtensions { get; } = [];
 
-    private readonly int _vao = GL.GenVertexArray();
-    private readonly int _vertexBuffer = GL.GenBuffer();
-    private readonly int _instanceBuffer = GL.GenBuffer();
-    private readonly Shader _shader = new("Shaders/Rectangle.vert", "Shaders/Rectangle.frag");
+    // Buffers
+    private readonly int _vao;
+    private readonly int _vertexBuffer;
+    private readonly int _instanceBuffer;
+
+    // Shader data
+    private readonly Shader _shader;
     private readonly int _imageUniformLocation;
 
-    private readonly float[] _buffer =
-        new float[Constants.MaxRectangles * Constants.RectangleComponentCount * sizeof(float)];
+    // Buffer and bookkeeping
+    private readonly float[] _buffer;
+    private int _bufferIndex;
 
-    private int _bufferIndex = 0;
-
+    private readonly Atlas _atlas;
     private Vector2i _screenSize;
 
-    private Renderer() {
+    public Renderer() {
+        _vao = GL.GenVertexArray();
+        _vertexBuffer = GL.GenBuffer();
+        _instanceBuffer = GL.GenBuffer();
+
+        _shader = Shader.FromFiles("Shaders/Rectangle.vert", "Shaders/Rectangle.frag");
         _imageUniformLocation = _shader["image"];
+
+        _buffer = new float[Constants.MaxRectangles * Constants.RectangleComponentCount * sizeof(float)];
+        _bufferIndex = 0;
+
+        _atlas = new Atlas();
+        _screenSize = Vector2i.Zero;
     }
 
-    public void Register(IRequiredEvents events) {
-        events.Event<GameEvents.Load>().Subscribe(this.OnLoad);
-        events.Event<GameEvents.Resize>().Subscribe(this.OnResize);
+    public void Register(ref GameEvents events) {
+        events.OnLoad.Subscribe(this.OnLoad);
+        events.OnResize.Subscribe(this.OnResize);
     }
 
     public void Draw(Vector2 position, Vector2 size, Vector2 texturePosition, Vector2 textureSize) {
@@ -60,14 +60,17 @@ public class Renderer {
         _buffer[_bufferIndex++] = position.Y / _screenSize.Y;
         _buffer[_bufferIndex++] = size.X / _screenSize.X;
         _buffer[_bufferIndex++] = size.Y / _screenSize.Y;
-        _buffer[_bufferIndex++] = texturePosition.X / Atlas.Instance.Texture.Size.X;
-        _buffer[_bufferIndex++] = texturePosition.Y / Atlas.Instance.Texture.Size.Y;
-        _buffer[_bufferIndex++] = textureSize.X / Atlas.Instance.Texture.Size.X;
-        _buffer[_bufferIndex++] = textureSize.Y / Atlas.Instance.Texture.Size.Y;
+        _buffer[_bufferIndex++] = texturePosition.X / _atlas.Texture.Size.X;
+        _buffer[_bufferIndex++] = texturePosition.Y / _atlas.Texture.Size.Y;
+        _buffer[_bufferIndex++] = textureSize.X / _atlas.Texture.Size.X;
+        _buffer[_bufferIndex++] = textureSize.Y / _atlas.Texture.Size.Y;
     }
 
     public void DrawTile(Vector2 position, Vector2i atlasPosition) =>
-        Draw(position, Atlas.Instance.CellSize, Atlas.Instance.GetPosition(atlasPosition), Atlas.Instance.CellSize);
+        Draw(position, Atlas.CellSize, _atlas.GetPosition(atlasPosition), Atlas.CellSize);
+
+    public void DrawTile(Vector2 position, Vector2 size, Vector2i atlasPosition) =>
+        Draw(position, size, _atlas.GetPosition(atlasPosition), Atlas.CellSize);
 
     private void OnLoad(object sender, GameEvents.Load args) {
         this.LoadSupportedExtensions();
@@ -88,7 +91,7 @@ public class Renderer {
         GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
 
         _shader.Use();
-        Atlas.Instance.Texture.Bind(0, _imageUniformLocation);
+        _atlas.Texture.Bind(0, _imageUniformLocation);
 
         GL.BindVertexArray(_vao);
 

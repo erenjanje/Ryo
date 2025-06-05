@@ -5,19 +5,23 @@ namespace Ryo.Rendering;
 public readonly record struct Shader(int Program) {
     public Shader() : this(GL.CreateProgram()) { }
 
-    public Shader(string vertexShaderSource, string fragmentShaderSource) : this() {
-        var vertexShaderData = File.ReadAllText(vertexShaderSource);
-        var fragmentShaderData = File.ReadAllText(fragmentShaderSource);
+    public static Shader FromFiles(string vertexShaderFile, string fragmentShaderFile) {
+        var ret = new Shader();
+
+        var vertexShaderData = File.ReadAllText(vertexShaderFile);
+        var fragmentShaderData = File.ReadAllText(fragmentShaderFile);
 
         var vertexShader = GL.CreateShader(ShaderType.VertexShader);
         var fragmentShader = GL.CreateShader(ShaderType.FragmentShader);
 
-        Shader.Compile(vertexShader, vertexShaderData, "Vertex Shader");
-        Shader.Compile(fragmentShader, fragmentShaderData, "Fragment Shader");
-        Shader.Link(Program, vertexShader, fragmentShader);
+        Compile(vertexShader, vertexShaderData, "Vertex Shader");
+        Compile(fragmentShader, fragmentShaderData, "Fragment Shader");
+        Link(ret.Program, vertexShader, fragmentShader);
 
         GL.DeleteShader(vertexShader);
         GL.DeleteShader(fragmentShader);
+
+        return ret;
     }
 
     public void Use() => GL.UseProgram(Program);
