@@ -17,9 +17,6 @@ internal static class Constants {
 }
 
 public sealed class Renderer : IRenderer {
-    public interface IRequiredEvents
-        : IEvent<GameEvents.Load>, IEvent<GameEvents.Resize>;
-
     public HashSet<string> SupportedExtensions { get; } = [];
 
     // Buffers
@@ -38,7 +35,7 @@ public sealed class Renderer : IRenderer {
     private readonly Atlas _atlas;
     private Vector2i _screenSize;
 
-    public Renderer(IRequiredEvents events) {
+    public Renderer() {
         _vao = GL.GenVertexArray();
         _vertexBuffer = GL.GenBuffer();
         _instanceBuffer = GL.GenBuffer();
@@ -51,9 +48,11 @@ public sealed class Renderer : IRenderer {
 
         _atlas = new Atlas();
         _screenSize = Vector2i.Zero;
+    }
 
-        events.Event<GameEvents.Load>().Subscribe(this.OnLoad);
-        events.Event<GameEvents.Resize>().Subscribe(this.OnResize);
+    public void Register(ref GameEvents events) {
+        events.OnLoad.Subscribe(this.OnLoad);
+        events.OnResize.Subscribe(this.OnResize);
     }
 
     public void Draw(Vector2 position, Vector2 size, Vector2 texturePosition, Vector2 textureSize) {

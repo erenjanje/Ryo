@@ -3,34 +3,27 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace Ryo.Tiles;
 
-public record TileMap {
-    public interface IRequiredEvents : IEvent<GameEvents.Render>, IEvent<GameEvents.MouseDown>;
-
-    public enum Type {
-        Dirt,
-        Grass,
-        Count,
-    }
-
-    public record struct Tile(Type Type);
-
-    public TileMap(IRequiredEvents events, int width, int height) {
+public record TileMap : ITileMap {
+    public TileMap(int width, int height) {
         this.Width = width;
         this.Height = height;
-        _tiles = new Tile[width, height];
-        events.Event<GameEvents.Render>().Subscribe(this.OnRender);
-        events.Event<GameEvents.MouseDown>().Subscribe(this.OnMouseDown);
+        _tiles = new ITileMap.Tile[width, height];
+    }
+
+    public void Register(ref GameEvents events) {
+        events.OnRender.Subscribe(this.OnRender);
+        events.OnMouseDown.Subscribe(this.OnMouseDown);
     }
 
     private const int Base1 = 1;
-    private const int Base2 = (int)Type.Count;
+    private const int Base2 = (int)ITileMap.Type.Count;
     private const int Base3 = Base2 * Base2;
     private const int Base4 = Base2 * Base2 * Base2;
-    private const Type Border = Type.Dirt;
+    private const ITileMap.Type Border = ITileMap.Type.Dirt;
     private const int TileUnit = 32;
     private static readonly Vector2i TileSize = (TileUnit, TileUnit);
 
-    private readonly Tile[,] _tiles;
+    private readonly ITileMap.Tile[,] _tiles;
     private int Width { get; }
     private int Height { get; }
 
@@ -42,15 +35,15 @@ public record TileMap {
         return topLeft * Base1 + topRight * Base2 + bottomLeft * Base3 + bottomRight * Base4;
     }
 
-    public Tile this[int x, int y] {
-        get => x < 0 || x >= Width || y < 0 || y >= Height ? new Tile(Border) : _tiles[x, y];
+    public ITileMap.Tile this[int x, int y] {
+        get => x < 0 || x >= Width || y < 0 || y >= Height ? new ITileMap.Tile(Border) : _tiles[x, y];
 
         set {
             if (!(x < 0 || x >= Width || y < 0 || y >= Height)) _tiles[x, y] = value;
         }
     }
 
-    private Tile this[Vector2i position] {
+    public ITileMap.Tile this[Vector2i position] {
         get => this[position.X, position.Y];
         set => this[position.X, position.Y] = value;
     }
@@ -72,6 +65,7 @@ public record TileMap {
 
     private void OnMouseDown(object sender, GameEvents.MouseDown args) {
         var coordinate = this.FromScreenPosition(args.MousePosition);
-        this[coordinate] = new Tile(args.Button == MouseButton.Left ? Type.Dirt : Type.Grass);
+        this[coordinate] =
+            new ITileMap.Tile(args.Button == MouseButton.Left ? ITileMap.Type.Dirt : ITileMap.Type.Grass);
     }
 }
