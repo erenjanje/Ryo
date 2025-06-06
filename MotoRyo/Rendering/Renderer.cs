@@ -1,8 +1,10 @@
 using System.Runtime.CompilerServices;
+using Ryo.MotoRyo.Event;
+using Ryo.MotoRyo.Tiles;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 
-namespace Ryo.Rendering;
+namespace Ryo.MotoRyo.Rendering;
 
 internal static class Constants {
     internal const int MaxRectangles = 65536;
@@ -14,41 +16,30 @@ internal static class Constants {
 
     internal const int VertexComponentCount = 2;
     internal const int VertexDataSize = 6 * VertexComponentCount * sizeof(float);
+
+    internal const int CellUnit = 16;
+    internal static readonly Vector2i CellSize = new(CellUnit, CellUnit);
 }
 
 public sealed class Renderer : IRenderer {
     public HashSet<string> SupportedExtensions { get; } = [];
 
     // Buffers
-    private readonly int _vao;
-    private readonly int _vertexBuffer;
-    private readonly int _instanceBuffer;
+    private readonly int _vao = GL.GenVertexArray();
+    private readonly int _vertexBuffer = GL.GenBuffer();
+    private readonly int _instanceBuffer = GL.GenBuffer();
 
     // Shader data
-    private readonly Shader _shader;
-    private readonly int _imageUniformLocation;
+    private readonly Shader _shader = new();
+    private int _imageUniformLocation;
 
     // Buffer and bookkeeping
-    private readonly float[] _buffer;
-    private int _bufferIndex;
+    private readonly float[] _buffer =
+        new float[Constants.MaxRectangles * Constants.RectangleComponentCount * sizeof(float)];
+    private int _bufferIndex = 0;
 
-    private readonly Atlas _atlas;
-    private Vector2i _screenSize;
-
-    public Renderer() {
-        _vao = GL.GenVertexArray();
-        _vertexBuffer = GL.GenBuffer();
-        _instanceBuffer = GL.GenBuffer();
-
-        _shader = Shader.FromFiles("Shaders/Rectangle.vert", "Shaders/Rectangle.frag");
-        _imageUniformLocation = _shader["image"];
-
-        _buffer = new float[Constants.MaxRectangles * Constants.RectangleComponentCount * sizeof(float)];
-        _bufferIndex = 0;
-
-        _atlas = new Atlas();
-        _screenSize = Vector2i.Zero;
-    }
+    private Texture _texture = new();
+    private Vector2i _screenSize = Vector2i.Zero;
 
     public void Register(IGameEvents events) {
         events.OnLoad.Subscribe(this.OnLoad);
@@ -60,17 +51,17 @@ public sealed class Renderer : IRenderer {
         _buffer[_bufferIndex++] = position.Y / _screenSize.Y;
         _buffer[_bufferIndex++] = size.X / _screenSize.X;
         _buffer[_bufferIndex++] = size.Y / _screenSize.Y;
-        _buffer[_bufferIndex++] = texturePosition.X / _atlas.Texture.Size.X;
-        _buffer[_bufferIndex++] = texturePosition.Y / _atlas.Texture.Size.Y;
-        _buffer[_bufferIndex++] = textureSize.X / _atlas.Texture.Size.X;
-        _buffer[_bufferIndex++] = textureSize.Y / _atlas.Texture.Size.Y;
+        _buffer[_bufferIndex++] = texturePosition.X / _texture.Size.X;
+        _buffer[_bufferIndex++] = texturePosition.Y / _texture.Size.Y;
+        _buffer[_bufferIndex++] = textureSize.X / _texture.Size.X;
+        _buffer[_bufferIndex++] = textureSize.Y / _texture.Size.Y;
     }
 
     public void DrawTile(Vector2 position, Vector2i atlasPosition) =>
-        Draw(position, Atlas.CellSize, _atlas.GetPosition(atlasPosition), Atlas.CellSize);
+        Draw(position, Constants.CellSize, atlasPosition * Constants.CellSize, Constants.CellSize);
 
     public void DrawTile(Vector2 position, Vector2 size, Vector2i atlasPosition) =>
-        Draw(position, size, _atlas.GetPosition(atlasPosition), Atlas.CellSize);
+        Draw(position, size, atlasPosition * Constants.CellSize, Constants.CellSize);
 
     public void Render() {
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
@@ -82,7 +73,7 @@ public sealed class Renderer : IRenderer {
         GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
 
         _shader.Use();
-        _atlas.Texture.Bind(0, _imageUniformLocation);
+        _texture.Bind(0, _imageUniformLocation);
 
         GL.BindVertexArray(_vao);
 
@@ -97,6 +88,13 @@ public sealed class Renderer : IRenderer {
     private void OnLoad(object sender, IGameEvents.Load args) {
         this.LoadSupportedExtensions();
         this.InitRectangle();
+
+        _shader.LoadFromStreams(
+            args.assetManager.LoadAssetTextStream("Shaders/Rectangle.vert"),
+            args.assetManager.LoadAssetTextStream("Shaders/Rectangle.frag")
+        );
+        _texture.LoadFromStream(args.assetManager.LoadAssetStream("Map/TileMap.png"));
+        _imageUniformLocation = _shader["image"];
 
         GL.ClearColor(Color4.Magenta);
         GL.Enable(EnableCap.Blend);

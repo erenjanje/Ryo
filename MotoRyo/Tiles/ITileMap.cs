@@ -1,6 +1,6 @@
 using OpenTK.Mathematics;
 
-namespace Ryo.Tiles;
+namespace Ryo.MotoRyo.Tiles;
 
 public interface ITileMap : IComponent {
     public enum Type {

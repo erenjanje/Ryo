@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
-namespace Ryo;
+namespace Ryo.MotoRyo;
 
 public static class Utils {
     public readonly record struct KeyData(Keys Key, KeyModifiers Modifiers);

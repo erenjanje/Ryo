@@ -3,12 +3,14 @@ using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using StbImageSharp;
 
-namespace Ryo.Rendering;
+namespace Ryo.MotoRyo.Rendering;
 
-public readonly record struct Texture(int Tex) {
-    public Vector2i Size { get; }
+public record struct Texture(int Tex) {
+    public Vector2i Size { get; private set; }
 
-    public Texture(string file) : this(GL.GenTexture()) {
+    public Texture() : this(GL.GenTexture()) { }
+
+    public void LoadFromStream(Stream stream) {
         GL.BindTexture(TextureTarget.Texture2D, Tex);
         GL.ActiveTexture(TextureUnit.Texture0);
 
@@ -19,7 +21,7 @@ public readonly record struct Texture(int Tex) {
             (int)TextureMinFilter.NearestMipmapNearest);
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
 
-        this.Size = this.LoadImage(file);
+        this.Size = this.LoadImage(stream);
 
         GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
 
@@ -36,9 +38,7 @@ public readonly record struct Texture(int Tex) {
         GL.ActiveTexture(TextureUnit.Texture0 + textureUnit);
     }
 
-    private unsafe Vector2i LoadImage(string filename) {
-        var file = File.OpenRead(filename);
-
+    private unsafe Vector2i LoadImage(Stream file) {
         var pointer = (byte*)null;
         int width;
         int height;

@@ -1,12 +1,14 @@
+using AssetManager;
+using Ryo.MotoRyo.Rendering;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
-namespace Ryo.Event;
+namespace Ryo.MotoRyo.Event;
 
 public interface IGameEvents {
     #region Lifetime Events
 
-    readonly record struct Load;
+    readonly record struct Load(AssetManager.AssetManager assetManager);
     Event<Load> OnLoad { get; }
 
     readonly record struct Close(Utils.ThreadSafeWrapper<bool> ShouldClose);

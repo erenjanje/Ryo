@@ -1,4 +1,4 @@
-namespace Ryo.Event;
+namespace Ryo.MotoRyo.Event;
 
 public sealed class GameEvents : IGameEvents {
     public Event<IGameEvents.Load> OnLoad { get; } = new();

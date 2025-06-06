@@ -1,7 +1,8 @@
+using Ryo.MotoRyo.Event;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
-namespace Ryo.Tiles;
+namespace Ryo.MotoRyo.Tiles;
 
 public sealed record TileMap : ITileMap {
     public TileMap(int width, int height) {

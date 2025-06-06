@@ -1,27 +1,21 @@
+using System.Text;
 using OpenTK.Graphics.OpenGL4;
 
-namespace Ryo.Rendering;
+namespace Ryo.MotoRyo.Rendering;
 
 public readonly record struct Shader(int Program) {
     public Shader() : this(GL.CreateProgram()) { }
 
-    public static Shader FromFiles(string vertexShaderFile, string fragmentShaderFile) {
-        var ret = new Shader();
-
-        var vertexShaderData = File.ReadAllText(vertexShaderFile);
-        var fragmentShaderData = File.ReadAllText(fragmentShaderFile);
-
+    public void LoadFromStreams(StreamReader vertexShaderStream, StreamReader fragmentShaderStream) {
         var vertexShader = GL.CreateShader(ShaderType.VertexShader);
         var fragmentShader = GL.CreateShader(ShaderType.FragmentShader);
 
-        Compile(vertexShader, vertexShaderData, "Vertex Shader");
-        Compile(fragmentShader, fragmentShaderData, "Fragment Shader");
-        Link(ret.Program, vertexShader, fragmentShader);
+        Compile(vertexShader, vertexShaderStream.ReadToEnd(), "Vertex Shader");
+        Compile(fragmentShader, fragmentShaderStream.ReadToEnd(), "Fragment Shader");
+        Link(Program, vertexShader, fragmentShader);
 
         GL.DeleteShader(vertexShader);
         GL.DeleteShader(fragmentShader);
-
-        return ret;
     }
 
     public void Use() => GL.UseProgram(Program);

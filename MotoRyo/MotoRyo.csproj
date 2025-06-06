@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <PublishAot>true</PublishAot>
+        <InvariantGlobalization>true</InvariantGlobalization>
+        <WarningsAsErrors>Nullable</WarningsAsErrors>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="OpenTK" Version="4.9.4"/>
+        <PackageReference Include="StbImageSharp" Version="2.30.15"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Using Include="Ryo.MotoRyo.Rendering"/>
+        <Using Include="Ryo.MotoRyo.Tiles"/>
+        <Using Include="Ryo.MotoRyo.Event"/>
+        <Using Include="Ryo.MotoRyo.Geometry"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\AssetManager\AssetManager.csproj" />
+    </ItemGroup>
+
+</Project>

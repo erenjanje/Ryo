@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using OpenTK.Mathematics;
 
-namespace Ryo.Rendering;
+namespace Ryo.MotoRyo.Rendering;
 
 public interface IRenderer : IComponent {
     void Draw(Vector2 position, Vector2 size, Vector2 texturePosition, Vector2 textureSize);

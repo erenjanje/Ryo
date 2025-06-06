@@ -1,17 +1,22 @@
 using System.ComponentModel;
+using AssetManager;
+using Ryo.MotoRyo.Event;
+using Ryo.MotoRyo.Rendering;
+using Ryo.MotoRyo.Tiles;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
-namespace Ryo;
+namespace Ryo.MotoRyo;
 
 public sealed class Application : GameWindow {
     public Application(int width = 1280, int height = 960) :
         base(GameWindowSettings.Default, new NativeWindowSettings()) {
         GL.LoadBindings(new GLFWBindingsContext()); // In NativeAot, bindings are not loaded by default
 
+        _assetManager = new AssetManager.AssetManager(".");
         _events = new GameEvents();
         _renderer = new Renderer();
         _tileMap = new TileMap(80, 60);
@@ -23,6 +28,7 @@ public sealed class Application : GameWindow {
         this.CenterWindow();
     }
 
+    private readonly AssetManager.AssetManager _assetManager;
     private readonly IGameEvents _events;
     private readonly IRenderer _renderer;
     private readonly ITileMap _tileMap;
@@ -33,7 +39,7 @@ public sealed class Application : GameWindow {
 
     protected override void OnLoad() {
         base.OnLoad();
-        _events.OnLoad.Invoke(this, new());
+        _events.OnLoad.Invoke(this, new(_assetManager));
     }
 
     protected override void OnClosing(CancelEventArgs e) {
